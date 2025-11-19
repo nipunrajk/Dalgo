@@ -1,1 +1,28 @@
 @import 'tailwindcss';
+
+@media (max-width: 768px) {
+  main {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .max-w-5xl {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+button:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.25);
+  outline-offset: 2px;
+}
+input,
+textarea,
+select {
+  transition: box-shadow 0.12s ease, transform 0.08s ease;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.06);
+  transform: translateY(-1px);
+}

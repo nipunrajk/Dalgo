@@ -4,30 +4,35 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../store/useAuthStore';
 import { logoutUser } from '../lib/api';
+import { useToastStore } from '../store/useToastStore';
 
 export default function Header() {
   const user = useAuthStore((s) => s.user);
   const clearUser = useAuthStore((s) => s.clearUser);
   const router = useRouter();
+  const pushToast = useToastStore((s) => s.push);
 
   async function onLogout() {
     try {
       await logoutUser();
-    } catch (err) {
-      console.warn('logout error', err);
-    } finally {
       clearUser();
+      pushToast('Logged out', 'info');
+      router.push('/login');
+    } catch (err) {
+      clearUser();
+      pushToast('Logout failed (client)', 'error');
       router.push('/login');
     }
   }
 
   return (
     <header className='bg-white shadow-sm'>
-      <div className='max-w-5xl mx-auto px-4 py-4 flex items-center justify-between'>
+      <div className='max-w-5xl mx-auto px-4 py-3 flex items-center justify-between'>
         <Link href='/' className='text-xl font-bold'>
           My Dashboard
         </Link>
-        <nav className='space-x-4 flex items-center'>
+
+        <nav className='hidden md:flex items-center gap-4'>
           <Link href='/dashboard' className='text-sm'>
             Dashboard
           </Link>
@@ -53,6 +58,25 @@ export default function Header() {
             </>
           )}
         </nav>
+
+        {/* Mobile menu fallback */}
+        <div className='md:hidden flex items-center gap-2'>
+          <Link href='/dashboard' className='text-sm'>
+            Dash
+          </Link>
+          {!user ? (
+            <Link href='/login' className='text-sm'>
+              Login
+            </Link>
+          ) : (
+            <button
+              onClick={onLogout}
+              className='px-2 py-1 bg-rose-500 text-white rounded text-sm'
+            >
+              Logout
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

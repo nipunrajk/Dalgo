@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { loginUser } from '../../lib/api';
 import { useAuthStore } from '../../store/useAuthStore';
 
+import Spinner from '../../components/ui/Spinner';
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
@@ -17,7 +19,8 @@ export default function LoginPage() {
   function validate() {
     const newErrors: any = {};
     if (!form.email.trim()) newErrors.email = 'Email is required';
-    else if (!emailRegex.test(form.email)) newErrors.email = 'Enter a valid email';
+    else if (!emailRegex.test(form.email))
+      newErrors.email = 'Enter a valid email';
     if (!form.password) newErrors.password = 'Password is required';
     else if (form.password.length < 6)
       newErrors.password = 'Password must be at least 6 characters';
@@ -82,7 +85,13 @@ export default function LoginPage() {
             className='px-4 py-2 bg-sky-600 text-white rounded disabled:opacity-60'
             disabled={submitting}
           >
-            {submitting ? 'Signing in...' : 'Sign in'}
+            {submitting ? (
+              <span className='flex items-center gap-2'>
+                <Spinner size={16} /> Signing in...
+              </span>
+            ) : (
+              'Sign in'
+            )}
           </button>
           <a href='/register' className='text-sm text-slate-600'>
             Create account

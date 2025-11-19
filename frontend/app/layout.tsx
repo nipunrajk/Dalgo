@@ -2,10 +2,11 @@ import './globals.css';
 import Header from '../components/Header';
 import AuthProvider from '../components/AuthProvider';
 import AppQueryProvider from '../components/QueryProvider';
+import Toasts from '../components/Toast';
 
 export const metadata = {
   title: 'My Dashboard App',
-  description: 'Assessment frontend - Next.js 16 App Router',
+  description: 'Assessment frontend',
 };
 
 export default function RootLayout({
@@ -20,6 +21,7 @@ export default function RootLayout({
           <AuthProvider>
             <Header />
             <main className='max-w-5xl mx-auto p-6'>{children}</main>
+            <Toasts />
           </AuthProvider>
         </AppQueryProvider>
       </body>
