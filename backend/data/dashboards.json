@@ -1,1 +1,24 @@
-{}
+{
+  "135c5958-0925-4ba0-ad7a-39d997cebe1f": {
+    "widgets": [
+      {
+        "id": "1763555922771-jbvwyr",
+        "type": "clock",
+        "title": "Clock",
+        "data": {},
+        "createdAt": "2025-11-19T12:38:42.771Z",
+        "position": 0
+      },
+      {
+        "id": "1763555933008-a1fcxb",
+        "type": "notes",
+        "title": "Notes",
+        "data": {
+          "text": ""
+        },
+        "createdAt": "2025-11-19T12:38:53.008Z",
+        "position": 1
+      }
+    ]
+  }
+}

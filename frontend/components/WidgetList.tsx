@@ -40,35 +40,42 @@ export default function WidgetList() {
     const copied = widgets.slice();
     const [moved] = copied.splice(src, 1);
     copied.splice(dest, 0, moved);
-    setWidgets(copied);
+
+    const withPos = copied.map((w, i) => ({ ...w, position: i }));
+    setWidgets(withPos);
+
     pushToast('Widget order updated', 'info', 1500);
   }
 
   return (
     <div>
-      <div className='mb-4 flex items-center gap-3'>
-        <label className='text-sm font-medium'>Add widget</label>
-        <select
-          value={newType}
-          onChange={(e) => setNewType(e.target.value as WidgetType)}
-          className='border px-2 py-1 rounded'
-        >
-          <option value='clock'>Clock</option>
-          <option value='notes'>Notes</option>
-          <option value='todo'>Todo</option>
-        </select>
-        <button
-          onClick={add}
-          className='px-3 py-1 bg-sky-600 text-white rounded'
-        >
-          Add
-        </button>
+      <div className='mb-4 flex flex-col sm:flex-row sm:items-center gap-3'>
+        <div className='flex items-center gap-3 flex-1'>
+          <label className='text-sm font-medium whitespace-nowrap'>
+            Add widget
+          </label>
+          <select
+            value={newType}
+            onChange={(e) => setNewType(e.target.value as WidgetType)}
+            className='border px-2 py-2 rounded flex-1 sm:flex-initial'
+          >
+            <option value='clock'>Clock</option>
+            <option value='notes'>Notes</option>
+            <option value='todo'>Todo</option>
+          </select>
+          <button
+            onClick={add}
+            className='px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 active:bg-sky-800'
+          >
+            Add
+          </button>
+        </div>
         <button
           onClick={() => {
             setWidgets([]);
             pushToast('Cleared widgets', 'info');
           }}
-          className='px-3 py-1 ml-auto text-sm border rounded'
+          className='px-3 py-2 text-sm border rounded hover:bg-gray-50 active:bg-gray-100 sm:ml-auto'
         >
           Clear
         </button>
@@ -80,7 +87,7 @@ export default function WidgetList() {
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className='grid grid-cols-1 md:grid-cols-2 gap-4'
+              className='grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4'
             >
               {widgets.length === 0 && (
                 <div className='col-span-full p-6 bg-white rounded shadow text-center text-slate-500'>
