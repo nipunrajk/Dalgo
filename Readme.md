@@ -168,6 +168,61 @@ Frontend runs on **[http://localhost:3000](http://localhost:3000)**
 * Not using a real database (SQLite/Postgres).
 * Widgets are not resizable; layout is static aside from ordering.
 
+## Deployment
+
+### Frontend (Vercel)
+
+* The Next.js frontend is deployed on **Vercel**.
+* Root Directory: `frontend/`
+* Environment variables:
+
+  ```bash
+  NEXT_PUBLIC_API_URL=https://dalgo.onrender.com
+  ```
+* Vercel auto-builds the project using `npm install` and `npm run build`.
+* The frontend communicates with the backend using Axios with `withCredentials: true`.
+
+### Backend (Render)
+
+* The Express backend is deployed on **Render** as a free Web Service.
+* Root Directory: `backend/`
+* Build Command: `npm install`
+* Start Command: `npm start` (which runs `node server.js`)
+* Required environment variables:
+
+  ```bash
+  FRONTEND_ORIGIN=https://dalgo.vercel.app
+  JWT_SECRET=your-secret-here
+  JWT_EXPIRES_IN=7d
+  NODE_ENV=production
+  ```
+* Render provides `PORT` dynamically, and the server binds to `process.env.PORT`.
+
+### Cookie & CORS Setup
+
+* Backend uses:
+
+  * `sameSite: "none"`
+  * `secure: true` in production
+  * `httpOnly: true`
+* CORS configuration explicitly allows the Vercel domain and includes `credentials: true`.
+* This ensures cross-site cookies work between Vercel (frontend) and Render (backend).
+
+### File-Based Storage on Render
+
+* The backend uses `data/users.json` and `data/dashboards.json` for persistence.
+* Render allows writing to local disk during runtime.
+* Files are initialized with empty JSON structures on boot to avoid crashes.
+
+### Deployment Flow Summary
+
+1. Deploy backend to Render → get API URL.
+2. Deploy frontend to Vercel → set `NEXT_PUBLIC_API_URL` to backend URL.
+3. Update `FRONTEND_ORIGIN` on Render to match Vercel URL.
+4. Redeploy backend.
+5. Test login, cookie storage, and dashboard fetch.
+
 ## Notes
 
 File-based JSON storage is **intentional** for this assessment to keep setup simple and allow direct inspection of saved data. A production version should use a real database.
+
