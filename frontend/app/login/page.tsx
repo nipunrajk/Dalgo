@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { loginUser } from '../../lib/api';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -11,10 +11,18 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const loading = useAuthStore((s) => s.loading);
   const setUser = useAuthStore((s) => s.setUser);
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState<any>({});
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace('/dashboard');
+    }
+  }, [loading, user, router]);
 
   function validate() {
     const newErrors: any = {};
@@ -45,6 +53,16 @@ export default function LoginPage() {
       setSubmitting(false);
     }
   }
+
+  if (loading) {
+    return (
+      <div className='max-w-md mx-auto mt-12 bg-white p-6 rounded shadow text-center'>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (user) return null; // redirecting
 
   return (
     <div className='max-w-md mx-auto mt-12 bg-white p-6 rounded shadow'>

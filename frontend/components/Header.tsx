@@ -33,9 +33,11 @@ export default function Header() {
         </Link>
 
         <nav className='hidden md:flex items-center gap-4'>
-          <Link href='/dashboard' className='text-sm'>
-            Dashboard
-          </Link>
+          {user && (
+            <Link href='/dashboard' className='text-sm'>
+              Dashboard
+            </Link>
+          )}
           {!user && (
             <>
               <Link href='/login' className='text-sm'>
@@ -61,9 +63,11 @@ export default function Header() {
 
         {/* Mobile menu fallback */}
         <div className='md:hidden flex items-center gap-2'>
-          <Link href='/dashboard' className='text-sm'>
-            Dash
-          </Link>
+          {user && (
+            <Link href='/dashboard' className='text-sm'>
+              Dash
+            </Link>
+          )}
           {!user ? (
             <Link href='/login' className='text-sm'>
               Login

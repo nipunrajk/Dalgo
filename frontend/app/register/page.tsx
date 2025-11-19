@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { registerUser } from '../../lib/api';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -9,6 +9,8 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const loading = useAuthStore((s) => s.loading);
   const setUser = useAuthStore((s) => s.setUser);
   const [form, setForm] = useState({
     name: '',
@@ -19,15 +21,23 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<any>({});
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace('/dashboard');
+    }
+  }, [loading, user, router]);
+
   function validate() {
     const newErrors: any = {};
     if (!form.name.trim()) newErrors.name = 'Name is required';
     if (!form.email.trim()) newErrors.email = 'Email is required';
-    else if (!emailRegex.test(form.email)) newErrors.email = 'Enter a valid email';
+    else if (!emailRegex.test(form.email))
+      newErrors.email = 'Enter a valid email';
     if (!form.password) newErrors.password = 'Password is required';
     else if (form.password.length < 6)
       newErrors.password = 'Password must be at least 6 characters';
-    if (form.confirm !== form.password) newErrors.confirm = 'Passwords do not match';
+    if (form.confirm !== form.password)
+      newErrors.confirm = 'Passwords do not match';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -50,6 +60,16 @@ export default function RegisterPage() {
       setSubmitting(false);
     }
   }
+
+  if (loading) {
+    return (
+      <div className='max-w-md mx-auto mt-12 bg-white p-6 rounded shadow text-center'>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (user) return null; // redirecting
 
   return (
     <div className='max-w-md mx-auto mt-12 bg-white p-6 rounded shadow'>
