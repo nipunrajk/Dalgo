@@ -2,40 +2,32 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-type FormState = {
-  name: string;
-  email: string;
-  password: string;
-  confirm: string;
-};
+import { registerUser } from '../../lib/api';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>({
+  const setUser = useAuthStore((s) => s.setUser);
+  const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
     confirm: '',
   });
-  const [errors, setErrors] = useState<Partial<FormState>>({});
+  const [errors, setErrors] = useState<any>({});
   const [submitting, setSubmitting] = useState(false);
 
   function validate() {
-    const newErrors: Partial<FormState> = {};
-
+    const newErrors: any = {};
     if (!form.name.trim()) newErrors.name = 'Name is required';
     if (!form.email.trim()) newErrors.email = 'Email is required';
-    else if (!emailRegex.test(form.email))
-      newErrors.email = 'Enter a valid email';
+    else if (!emailRegex.test(form.email)) newErrors.email = 'Enter a valid email';
     if (!form.password) newErrors.password = 'Password is required';
     else if (form.password.length < 6)
       newErrors.password = 'Password must be at least 6 characters';
-    if (form.confirm !== form.password)
-      newErrors.confirm = 'Passwords do not match';
-
+    if (form.confirm !== form.password) newErrors.confirm = 'Passwords do not match';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -44,20 +36,18 @@ export default function RegisterPage() {
     e?.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-
     try {
-      //replace with actual backend call
-      console.log('would send register payload:', {
+      const res = await registerUser({
         name: form.name,
         email: form.email,
+        password: form.password,
       });
-      setTimeout(() => {
-        setSubmitting(false);
-        router.push('/login');
-      }, 700);
-    } catch (err) {
+      setUser(res.user || null);
+      router.push('/dashboard');
+    } catch (err: any) {
+      setErrors({ form: err.message || 'Registration failed' });
+    } finally {
       setSubmitting(false);
-      setErrors({ email: 'Registration failed' });
     }
   }
 
@@ -65,6 +55,7 @@ export default function RegisterPage() {
     <div className='max-w-md mx-auto mt-12 bg-white p-6 rounded shadow'>
       <h2 className='text-2xl font-semibold'>Create an account</h2>
       <form className='mt-4 space-y-4' onSubmit={onSubmit} noValidate>
+        {errors.form && <p className='text-red-600'>{errors.form}</p>}
         <div>
           <label className='block text-sm font-medium'>Full name</label>
           <input

@@ -34,3 +34,6 @@ backend/data/*.lock
 # Editor stuff
 .vscode/
 .idea/
+
+backend/data/users.json
+backend/data/dashboards.json

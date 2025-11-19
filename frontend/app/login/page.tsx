@@ -2,27 +2,25 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-type FormState = { email: string; password: string };
+import { loginUser } from '../../lib/api';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>({ email: '', password: '' });
-  const [errors, setErrors] = useState<Partial<FormState>>({});
+  const setUser = useAuthStore((s) => s.setUser);
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState<any>({});
   const [submitting, setSubmitting] = useState(false);
 
   function validate() {
-    const newErrors: Partial<FormState> = {};
-
+    const newErrors: any = {};
     if (!form.email.trim()) newErrors.email = 'Email is required';
-    else if (!emailRegex.test(form.email))
-      newErrors.email = 'Enter a valid email';
+    else if (!emailRegex.test(form.email)) newErrors.email = 'Enter a valid email';
     if (!form.password) newErrors.password = 'Password is required';
     else if (form.password.length < 6)
       newErrors.password = 'Password must be at least 6 characters';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -31,18 +29,17 @@ export default function LoginPage() {
     e?.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-
     try {
-      // Placeholder: replace with actual backend call
-      console.log('would send login payload:', form);
-      // simulate success
-      setTimeout(() => {
-        setSubmitting(false);
-        router.push('/dashboard');
-      }, 600);
-    } catch (err) {
+      const res = await loginUser({
+        email: form.email,
+        password: form.password,
+      });
+      setUser(res.user || null);
+      router.push('/dashboard');
+    } catch (err: any) {
+      setErrors({ form: err.message || 'Login failed' });
+    } finally {
       setSubmitting(false);
-      setErrors({ password: 'Login failed — check credentials' });
     }
   }
 
@@ -50,6 +47,7 @@ export default function LoginPage() {
     <div className='max-w-md mx-auto mt-12 bg-white p-6 rounded shadow'>
       <h2 className='text-2xl font-semibold'>Login</h2>
       <form className='mt-4 space-y-4' onSubmit={onSubmit} noValidate>
+        {errors.form && <p className='text-red-600'>{errors.form}</p>}
         <div>
           <label className='block text-sm font-medium'>Email</label>
           <input
