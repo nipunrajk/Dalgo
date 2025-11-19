@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { fetchDashboard, saveDashboard } from '../../lib/dashboardApi';
-import { useDashboardStore } from '../../store/useDashboardStore';
+import { useDashboardStore, Widget } from '../../store/useDashboardStore';
 import AuthGuard from '../../components/AuthGuard';
 import WidgetList from '../../components/WidgetList';
 
@@ -11,61 +11,82 @@ export default function DashboardPage() {
   const setWidgets = useDashboardStore((s) => s.setWidgets);
   const widgets = useDashboardStore((s) => s.widgets);
 
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const lastSavedRef = useRef<string>('');
+
   const query = useQuery({
     queryKey: ['dashboard'],
-    queryFn: async () => {
-      const d = await fetchDashboard();
-      return d;
-    },
+    queryFn: async () => fetchDashboard(),
     refetchOnWindowFocus: false,
   });
 
-  // hydrate Zustand when query.data arrives
-useEffect(() => {
-  if (!query.data) return;
-  const d = query.data as any;
-  let widgetsFromServer = d?.widgets ?? [];
+  function normalizeWidgets(list: any[] = []): Widget[] {
+    const hasPositions =
+      list.length && list.every((w) => typeof w.position === 'number');
 
-  if (
-    widgetsFromServer.length &&
-    widgetsFromServer.every((w: any) => typeof w.position === 'number')
-  ) {
-    widgetsFromServer = widgetsFromServer
-      .slice()
-      .sort((a: any, b: any) => a.position - b.position);
+    const ordered = hasPositions
+      ? [...list].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+      : [...list];
+
+    return ordered.map((w, i) => ({
+      ...w,
+      position: i,
+      createdAt: w.createdAt || new Date().toISOString(),
+    }));
   }
 
-  setWidgets(widgetsFromServer);
-}, [query.data, setWidgets]);
+  function snapshotFromWidgets(list: Widget[]) {
+    try {
+      return JSON.stringify(list);
+    } catch {
+      return '';
+    }
+  }
 
-  // mutation
+  useEffect(() => {
+    if (!query.data) return;
+
+    const data = query.data as any;
+    const serverWidgets: Widget[] = Array.isArray(data?.widgets)
+      ? data.widgets
+      : [];
+
+    const normalized = normalizeWidgets(serverWidgets);
+    setWidgets(normalized);
+
+    lastSavedRef.current = snapshotFromWidgets(normalized);
+    setHasUnsavedChanges(false);
+  }, [query.data, setWidgets]);
+
+  const currentSnapshot = useMemo(() => {
+    return snapshotFromWidgets(normalizeWidgets(widgets));
+  }, [widgets]);
+
+  useEffect(() => {
+    setHasUnsavedChanges(currentSnapshot !== lastSavedRef.current);
+  }, [currentSnapshot]);
+
   const saveMutation = useMutation({
-    mutationFn: async () => {
-      return saveDashboard({ widgets });
-    },
+    mutationFn: async (payload: { widgets: Widget[] }) =>
+      saveDashboard(payload),
   });
 
-  const [saving, setSaving] = useState(false);
+  const onSave = useCallback(async () => {
+    if (!hasUnsavedChanges) return;
 
-async function onSave() {
-  try {
-    setSaving(true);
+    try {
+      const payloadWidgets = normalizeWidgets(widgets);
 
-    const payloadWidgets = widgets.map((w, i) => ({ ...w, position: i }));
+      await saveMutation.mutateAsync({ widgets: payloadWidgets });
 
-    await saveDashboard({ widgets: payloadWidgets });
+      lastSavedRef.current = snapshotFromWidgets(payloadWidgets);
+      setHasUnsavedChanges(false);
 
-    await query.refetch();
-  } catch (err) {
-    console.error('Save failed', err);
-  } finally {
-    setSaving(false);
-  }
-}
-
-  const isLoading = query.isLoading;
-  const isError = query.isError;
-  const error = query.error;
+      query.refetch();
+    } catch (err) {
+      console.error('Save failed:', err);
+    }
+  }, [hasUnsavedChanges, widgets, saveMutation, query]);
 
   return (
     <AuthGuard>
@@ -78,34 +99,30 @@ async function onSave() {
             </p>
           </div>
 
-          <div className='flex flex-wrap items-center gap-2 md:gap-3'>
-
-            <button
-              onClick={onSave}
-              className='w-full md:w-auto md:ml-3 px-4 py-2 bg-sky-600 text-white rounded disabled:opacity-60 hover:bg-sky-700 active:bg-sky-800'
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save Dashboard'}
-            </button>
-          </div>
+          <button
+            onClick={onSave}
+            disabled={!hasUnsavedChanges}
+            className={`w-full md:w-auto px-4 py-2 rounded text-white
+              ${
+                hasUnsavedChanges
+                  ? 'bg-sky-600 hover:bg-sky-700'
+                  : 'bg-slate-400 cursor-not-allowed'
+              }
+            `}
+          >
+            {hasUnsavedChanges ? 'Save Dashboard (Unsaved)' : 'Save Dashboard'}
+          </button>
         </div>
 
-        <div className='mt-4 md:mt-6'>
-          {isLoading && (
-            <div className='p-4 bg-white rounded shadow text-sm md:text-base'>
-              Loading dashboard…
-            </div>
-          )}
-
-          {isError && (
-            <div className='p-4 bg-rose-50 border border-rose-200 rounded text-rose-700 text-sm md:text-base'>
-              Error loading dashboard: {(error as any)?.message ?? 'Unknown'}
-            </div>
-          )}
-
-          <div className='mt-4'>
-            <WidgetList />
+        {hasUnsavedChanges && (
+          <div className='mt-4 rounded border-l-4 border-yellow-400 bg-yellow-50 p-4 text-yellow-800 text-sm'>
+            You have unsaved changes — click <strong>Save Dashboard</strong> to
+            persist them.
           </div>
+        )}
+
+        <div className='mt-6'>
+          <WidgetList />
         </div>
       </section>
     </AuthGuard>
