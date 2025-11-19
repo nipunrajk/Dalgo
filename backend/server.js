@@ -5,6 +5,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 
+import dashboardRoutes from './routes/dashboard.js';
+
 const app = express();
 
 app.use(
@@ -19,6 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use('/auth', authRoutes);
+
+app.use('/dashboard', dashboardRoutes);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
