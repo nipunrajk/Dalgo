@@ -10,7 +10,6 @@ import WidgetList from '../../components/WidgetList';
 export default function DashboardPage() {
   const setWidgets = useDashboardStore((s) => s.setWidgets);
   const widgets = useDashboardStore((s) => s.widgets);
-  const addWidget = useDashboardStore((s) => s.addWidget);
 
   const query = useQuery({
     queryKey: ['dashboard'],
@@ -80,24 +79,6 @@ async function onSave() {
           </div>
 
           <div className='flex flex-wrap items-center gap-2 md:gap-3'>
-            <button
-              onClick={() => addWidget('clock')}
-              className='px-3 py-2 text-sm border rounded hover:bg-gray-50 active:bg-gray-100'
-            >
-              Add Clock
-            </button>
-            <button
-              onClick={() => addWidget('notes')}
-              className='px-3 py-2 text-sm border rounded hover:bg-gray-50 active:bg-gray-100'
-            >
-              Add Notes
-            </button>
-            <button
-              onClick={() => addWidget('todo')}
-              className='px-3 py-2 text-sm border rounded hover:bg-gray-50 active:bg-gray-100'
-            >
-              Add Todo
-            </button>
 
             <button
               onClick={onSave}

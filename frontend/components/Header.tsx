@@ -29,7 +29,7 @@ export default function Header() {
     <header className='bg-white shadow-sm'>
       <div className='max-w-5xl mx-auto px-4 py-3 flex items-center justify-between'>
         <Link href='/' className='text-xl font-bold'>
-          My Dashboard
+          Customizable Dashboard Builder
         </Link>
 
         <nav className='hidden md:flex items-center gap-4'>
